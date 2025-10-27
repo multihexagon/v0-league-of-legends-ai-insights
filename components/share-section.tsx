@@ -4,23 +4,32 @@ import { motion } from "framer-motion"
 import { Share2, Download, Twitter, Instagram } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export function ShareSection() {
+interface ShareSectionProps {
+  recap: {
+    strengths: string[]
+    next_match_tip: string
+    confidence: string
+  }
+}
+
+export function ShareSection({ recap }: ShareSectionProps) {
+  if (!recap) return null
   const shareCards = [
     {
       title: "Tu Año en la Grieta",
-      description: "847 partidas • 54% WR • Diamond II",
+      description: `Confianza ${recap.confidence} • ${recap.strengths.length} fortalezas`,
       gradient: "from-primary to-accent",
       icon: Share2,
     },
     {
-      title: "Campeón Favorito",
-      description: "Yasuo • 156 partidas • 58% WR",
+      title: "Fortalezas Principales",
+      description: recap.strengths.slice(0, 2).join(" • "),
       gradient: "from-accent to-secondary",
       icon: Twitter,
     },
     {
-      title: "Momento Épico",
-      description: "Pentakill con Lee Sin",
+      title: "Tip para Mejorar",
+      description: recap.next_match_tip,
       gradient: "from-secondary to-primary",
       icon: Instagram,
     },
@@ -100,7 +109,7 @@ export function ShareSection() {
 
         <div className="mt-12 pt-8 border-t border-border/30">
           <p className="text-sm text-muted-foreground">
-            {"Powered by AWS Bedrock • Riot Games API • League Developer Challenge 2024"}
+            {"Powered by AWS Bedrock • Riot Games API • League Developer Challenge 2025"}
           </p>
         </div>
       </motion.div>

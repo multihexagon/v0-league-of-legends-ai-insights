@@ -1,27 +1,50 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { fetchData } from "@/lib/fetchData"
 
-export function SummonerSearch() {
+interface SummonerSearchProps {
+  onDataFetched: (data: any) => void
+}
+
+export function SummonerSearch({ onDataFetched }: SummonerSearchProps) {
   const [summonerName, setSummonerName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<any>(null)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setResult(null)
+
     if (!summonerName.trim()) return
 
+    // Separar "Nombre#TAG"
+    const [name, tag] = summonerName.split("#")
+    if (!name || !tag) {
+      setError("Por favor usa el formato Nombre#TAG (ej: Hide on bush#KR1)")
+      return
+    }
+
     setIsLoading(true)
-    // TODO: Integrate with League API to fetch summoner data
-    setTimeout(() => {
+    try {
+      console.log("[v0] 🔍 Consultando Lambda con:", name, tag)
+      const data = await fetchData(name.trim(), tag.trim())
+
+      console.log("[v0] ✅ Datos obtenidos:", data)
+      setResult(data)
+      onDataFetched(data) // Enviar datos al componente padre
+    } catch (err: any) {
+      console.error("❌ Error al buscar:", err)
+      setError(err.message || "Hubo un error al buscar tus datos.")
+    } finally {
       setIsLoading(false)
-      console.log("[v0] Searching for summoner:", summonerName)
-    }, 1500)
+    }
   }
 
   return (
@@ -33,7 +56,9 @@ export function SummonerSearch() {
         className="max-w-3xl mx-auto"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-black mb-4 gradient-text">Tu Año en League of Legends</h1>
+          <h1 className="text-4xl md:text-6xl font-black mb-4 gradient-text">
+            Rift Rewind
+          </h1>
           <p className="text-lg md:text-xl text-muted-foreground">
             Descubre tus estadísticas, logros y momentos épicos
           </p>
@@ -46,7 +71,7 @@ export function SummonerSearch() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Nombre de Invocador#TAG"
+                  placeholder="NombreDeInvocador#TAG"
                   value={summonerName}
                   onChange={(e) => setSummonerName(e.target.value)}
                   className="pl-12 h-14 text-lg bg-background/50 border-primary/30 focus:border-primary"
@@ -72,7 +97,14 @@ export function SummonerSearch() {
                 )}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground mt-4 text-center">Ejemplo: Hide on bush#KR1, Faker#KR1</p>
+            <p className="text-sm text-muted-foreground mt-4 text-center">
+              Ejemplo: Hide on bush#KR1, Faker#KR1
+            </p>
+
+            {error && (
+              <p className="text-red-400 mt-4 text-center">{error}</p>
+            )}
+
           </div>
         </form>
       </motion.div>

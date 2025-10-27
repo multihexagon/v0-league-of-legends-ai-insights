@@ -153,4 +153,13 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+
+  /* Hover effects */
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+  }
 }

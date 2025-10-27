@@ -4,9 +4,38 @@ import { motion } from "framer-motion"
 import { Sparkles, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export function HeroSection() {
+interface HeroSectionProps {
+  summary: {
+    games: number
+    win_rate: number
+    avg_kda: number
+  }
+  topChampion?: {
+    name: string
+    image: string
+    splashImage?: string
+    games: number
+  }
+}
+
+export function HeroSection({ summary, topChampion }: HeroSectionProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Champion splash background (very subtle) */}
+      {topChampion?.splashImage && (
+        <div className="absolute inset-0">
+          <img
+            src={topChampion.splashImage}
+            alt={`${topChampion.name} background`}
+            className="w-full h-full object-cover opacity-5"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none'
+            }}
+          />
+        </div>
+      )}
+      
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
 
@@ -42,7 +71,7 @@ export function HeroSection() {
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card mb-8 neon-glow"
         >
           <Sparkles className="w-5 h-5 text-primary" />
-          <span className="text-sm font-semibold text-foreground">{"2024 League Recap"}</span>
+          <span className="text-sm font-semibold text-foreground">{"2025"}</span>
         </motion.div>
 
         <motion.h1
@@ -77,19 +106,45 @@ export function HeroSection() {
           </Button>
         </motion.div>
 
+        {/* Top Champion highlight */}
+        {topChampion && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="mt-16 flex items-center justify-center"
+          >
+            <div className="flex items-center gap-4 px-8 py-4 rounded-2xl glass-card neon-glow">
+              <img
+                src={topChampion.image}
+                alt={topChampion.name}
+                className="w-12 h-12 rounded-xl object-cover border-2 border-primary/50"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/placeholder.svg"
+                }}
+              />
+              <div className="text-left">
+                <p className="text-sm text-muted-foreground">Tu Campeón Favorito</p>
+                <p className="text-lg font-bold text-foreground">{topChampion.name}</p>
+                <p className="text-xs text-primary">{topChampion.games} partidas</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats preview with stagger animation */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto"
-        >
-          {[
-            { label: "Partidas", value: "847", color: "primary" },
-            { label: "Campeones", value: "23", color: "secondary" },
-            { label: "Win Rate", value: "54%", color: "accent" },
-            { label: "Rango Máximo", value: "Diamond II", color: "primary" },
-          ].map((stat, i) => (
+        {summary && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-24 grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          >
+            {[
+              { label: "Partidas", value: summary.games.toString(), color: "primary" },
+              { label: "Win Rate", value: `${(summary.win_rate * 100).toFixed(0)}%`, color: "accent" },
+              { label: "KDA Promedio", value: summary.avg_kda.toFixed(2), color: "secondary" },
+            ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
@@ -101,7 +156,8 @@ export function HeroSection() {
               <div className="text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
             </motion.div>
           ))}
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </section>
   )

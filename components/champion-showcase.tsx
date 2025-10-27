@@ -4,42 +4,58 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Crown, Flame, Star } from "lucide-react"
 
-export function ChampionShowcase() {
-  const champions = [
-    {
-      name: "Yasuo",
-      role: "Mid Lane",
-      games: 156,
-      winRate: 58,
-      kda: "3.2",
-      mastery: 7,
-      image: "/yasuo-league-of-legends-champion.jpg",
-      badge: "Más Jugado",
-      icon: Crown,
-    },
-    {
-      name: "Lee Sin",
-      role: "Jungle",
-      games: 134,
-      winRate: 52,
-      kda: "2.8",
-      mastery: 7,
-      image: "/lee-sin-league-of-legends-champion.jpg",
-      badge: "Carry",
-      icon: Flame,
-    },
-    {
-      name: "Thresh",
-      role: "Support",
-      games: 98,
-      winRate: 61,
-      kda: "4.1",
-      mastery: 6,
-      image: "/thresh-league-of-legends-champion.jpg",
-      badge: "MVP",
-      icon: Star,
-    },
-  ]
+interface Match {
+  champion: string
+  champion_img: string
+  champion_splash: string
+  role: string
+  kda: number
+  win: boolean
+}
+
+interface ChampionShowcaseProps {
+  matches: Match[]
+}
+
+export function ChampionShowcase({ matches }: ChampionShowcaseProps) {
+  if (!matches || matches.length === 0) return null
+
+  // Agrupar partidas por campeón
+  const championStats = matches.reduce((acc, match) => {
+    if (!acc[match.champion]) {
+      acc[match.champion] = {
+        name: match.champion,
+        image: match.champion_img,
+        splashImage: match.champion_splash,
+        role: match.role || "Unknown",
+        games: 0,
+        wins: 0,
+        totalKda: 0,
+      }
+    }
+    
+    acc[match.champion].games += 1
+    if (match.win) acc[match.champion].wins += 1
+    acc[match.champion].totalKda += match.kda
+    
+    return acc
+  }, {} as Record<string, any>)
+
+  // Convertir a array y calcular estadísticas finales
+  const champions = Object.values(championStats)
+    .map((champ: any) => ({
+      name: champ.name,
+      role: champ.role,
+      games: champ.games,
+      winRate: Math.round((champ.wins / champ.games) * 100),
+      kda: (champ.totalKda / champ.games).toFixed(1),
+      mastery: Math.min(7, Math.floor(champ.games / 2) + 4), // Simulación de maestría
+      image: champ.splashImage, // Usar splash art para imágenes grandes
+      badge: champ.games >= 3 ? "Más Jugado" : champ.winRate >= 70 ? "MVP" : "Carry",
+      icon: champ.games >= 3 ? Crown : champ.winRate >= 70 ? Star : Flame,
+    }))
+    .sort((a, b) => b.games - a.games)
+    .slice(0, 3) // Top 3 campeones
 
   return (
     <section className="py-32 px-4 container mx-auto">
@@ -75,6 +91,9 @@ export function ChampionShowcase() {
                   src={champion.image || "/placeholder.svg"}
                   alt={champion.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg"
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
