@@ -1,0 +1,45 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="smallCrystal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#0096ff"/>
+      <stop offset="100%" stop-color="#003d7a"/>
+    </linearGradient>
+    
+    <linearGradient id="smallGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffec8b"/>
+      <stop offset="100%" stop-color="#cc8400"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Dark background -->
+  <rect width="16" height="16" fill="#0a0a0a" rx="3"/>
+  
+  <!-- Hextech crystal with gradient -->
+  <path d="M8 1.5L13 4V12L8 14.5L3 12V4L8 1.5Z" 
+        fill="url(#smallCrystal)" 
+        stroke="#00c8ff" 
+        stroke-width="0.4"/>
+  
+  <!-- Inner crystal layer -->
+  <path d="M8 3L11 4.5V11.5L8 13L5 11.5V4.5L8 3Z" 
+        fill="#0096ff" 
+        opacity="0.5"/>
+  
+  <!-- AI core -->
+  <circle cx="8" cy="5.5" r="1.2" fill="url(#smallGold)"/>
+  <circle cx="8" cy="5.5" r="0.7" fill="#ffffff"/>
+  
+  <!-- Micro analytics -->
+  <rect x="6" y="9" width="0.8" height="2.5" fill="#ffd700" rx="0.2"/>
+  <rect x="7.2" y="8" width="0.8" height="3.5" fill="#ffec8b" rx="0.2"/>
+  <rect x="8.4" y="7.5" width="0.8" height="4" fill="#ffd700" rx="0.2"/>
+  <rect x="9.6" y="8.5" width="0.8" height="3" fill="#cc8400" rx="0.2"/>
+  
+  <!-- Subtle glow border -->
+  <rect width="16" height="16" fill="none" 
+        stroke="#00c8ff" 
+        stroke-width="0.2" 
+        rx="3" 
+        opacity="0.6"/>
+</svg>

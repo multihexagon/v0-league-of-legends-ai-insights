@@ -10,6 +10,17 @@ export const metadata: Metadata = {
   title: "League Wrapped - Your Year in Review",
   description: "AI-powered insights into your League of Legends journey",
   generator: "v0.app",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml', sizes: '32x32' },
+      { url: '/favicon-16x16.svg', sizes: '16x16', type: 'image/svg+xml' },
+      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.svg',
+  },
+  themeColor: "#0096ff",
+  colorScheme: "dark",
 }
 
 export default function RootLayout({
