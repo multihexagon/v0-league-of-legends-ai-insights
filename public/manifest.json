@@ -1,6 +1,6 @@
 {
-  "name": "League Wrapped - Your Year in Review",
-  "short_name": "League Wrapped",
+  "name": "League In Review",
+  "short_name": "League In Review",
   "description": "AI-powered insights into your League of Legends journey",
   "start_url": "/",
   "display": "standalone",

@@ -7,7 +7,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "League Wrapped - Your Year in Review",
+  title: "League In Review",
   description: "AI-powered insights into your League of Legends journey",
   generator: "v0.app",
   manifest: "/manifest.json",
