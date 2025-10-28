@@ -20,22 +20,9 @@ interface ShareSectionProps {
     win_rate: number
     avg_kda: number
   }
-  matches?: Array<{
-    champion: string
-    role: string
-    kills: number
-    deaths: number
-    assists: number
-    kda: number
-    cs: number
-    cs_per_min: number
-    win: boolean
-    damage_dealt: number
-    gold_earned: number
-  }>
 }
 
-export function ShareSection({ recap, playerName = "Summoner", summary, matches }: ShareSectionProps) {
+export function ShareSection({ recap, playerName = "Summoner", summary }: ShareSectionProps) {
   if (!recap) return null
   
   const [copied, setCopied] = useState(false)
@@ -75,15 +62,109 @@ export function ShareSection({ recap, playerName = "Summoner", summary, matches 
   }
 
   const handleDownloadPDF = async () => {
-    // Import the simple PDF generator
-    const { generateSimplePDF } = await import('../lib/pdf-generator-simple')
-    const playerData = {
-      playerName,
-      recap,
-      summary,
-      matches
+    setDownloading(true)
+    try {
+      console.log('Starting PDF generation...')
+      
+      // Import libraries with error handling
+      let html2canvas, jsPDF
+      try {
+        html2canvas = (await import('html2canvas')).default
+        jsPDF = (await import('jspdf')).default
+        console.log('Libraries imported successfully')
+      } catch (importError) {
+        console.error('Failed to import libraries:', importError)
+        throw new Error('Failed to load PDF generation libraries')
+      }
+
+      // Hide the share section temporarily
+      const shareSection = document.querySelector('[data-section="share"]') as HTMLElement
+      const originalDisplay = shareSection?.style.display || ''
+      
+      if (shareSection) {
+        shareSection.style.display = 'none'
+        console.log('Share section hidden')
+      }
+
+      try {
+        // Wait for reflow and scroll to top
+        await new Promise(resolve => setTimeout(resolve, 300))
+        window.scrollTo(0, 0)
+        await new Promise(resolve => setTimeout(resolve, 200))
+        console.log('Page prepared for capture')
+
+        // Capture screenshot with simplified options
+        console.log('Starting screenshot capture...')
+        const canvas = await html2canvas(document.body, {
+          backgroundColor: '#0a0a0a',
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: window.innerWidth,
+          height: window.innerHeight,
+          ignoreElements: (element: Element) => {
+            const isShareSection = element.getAttribute('data-section') === 'share'
+            const isScript = element.tagName === 'SCRIPT' || element.tagName === 'NOSCRIPT'
+            return isShareSection || isScript
+          }
+        } as any)
+
+        console.log('Screenshot captured successfully, canvas size:', canvas.width, 'x', canvas.height)
+
+        // Create PDF with better error handling
+        const pdf = new jsPDF('p', 'mm', 'a4')
+        const imgWidth = 210 // A4 width in mm
+        const pageHeight = 297 // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+        console.log('PDF dimensions calculated:', { imgWidth, imgHeight, pageHeight })
+
+        // Add image to PDF
+        const imgData = canvas.toDataURL('image/png', 0.8) // Compress image slightly
+        
+        if (imgHeight <= pageHeight) {
+          // Single page
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+          console.log('Added single page to PDF')
+        } else {
+          // Multiple pages
+          let heightLeft = imgHeight
+          let position = 0
+          
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+          heightLeft -= pageHeight
+          console.log('Added first page to PDF')
+          
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight
+            pdf.addPage()
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+            heightLeft -= pageHeight
+            console.log('Added additional page to PDF')
+          }
+        }
+
+        // Save PDF
+        const cleanName = playerName.replace(/[^a-zA-Z0-9]/g, '_') || 'Summoner'
+        const fileName = `${cleanName}_RiftRewind_${new Date().toISOString().split('T')[0]}.pdf`
+        pdf.save(fileName)
+        console.log('PDF saved successfully:', fileName)
+
+      } finally {
+        // Always restore the share section
+        if (shareSection) {
+          shareSection.style.display = originalDisplay
+          console.log('Share section restored')
+        }
+      }
+      
+    } catch (err) {
+      console.error('PDF generation failed:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
+      alert(`Failed to generate PDF: ${errorMessage}\n\nPlease try again or check your browser's console for more details.`)
+    } finally {
+      setDownloading(false)
     }
-    await generateSimplePDF(playerData, setDownloading)
   }
 
   const shareCards = [

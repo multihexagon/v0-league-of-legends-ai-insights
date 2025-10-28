@@ -35,11 +35,11 @@ export function RecentGames({ matches }: RecentGamesProps) {
     return (
       <section className="container mx-auto py-16">
         <div className="text-center mb-12">
-          <h3 className="text-4xl md:text-5xl font-black mb-4 gradient-text">Historial de Partidas</h3>
-          <p className="text-lg text-muted-foreground">No hay partidas recientes disponibles</p>
+          <h3 className="text-4xl md:text-5xl font-black mb-4 gradient-text">Match History</h3>
+          <p className="text-lg text-muted-foreground">No recent matches available</p>
         </div>
         <div className="text-center p-8 rounded-3xl glass-card">
-          <p className="text-muted-foreground">Los datos de partidas se mostrarán aquí cuando estén disponibles.</p>
+                  <p className="text-muted-foreground">Match data will be displayed here when available.</p>
         </div>
       </section>
     )
@@ -75,31 +75,42 @@ export function RecentGames({ matches }: RecentGamesProps) {
     setExpandedCards(newExpanded)
   }
 
+  // Función para detectar partidas remake/AFK (todas las estadísticas en 0)
+  const isRemakeOrAFK = (match: Match) => {
+    return match.kills === 0 && 
+           match.deaths === 0 && 
+           match.assists === 0 && 
+           match.damage_dealt === 0 && 
+           match.gold_earned === 0
+  }
+
   // Función para determinar el color del KDA
-  const getKDAColor = (kda: number) => {
-    if (kda >= 3) return "text-green-400"
-    if (kda >= 2) return "text-yellow-400"
-    if (kda >= 1) return "text-orange-400"
+  const getKDAColor = (match: Match) => {
+    if (isRemakeOrAFK(match)) return "text-gray-400"
+    if (match.kda >= 3) return "text-green-400"
+    if (match.kda >= 2) return "text-yellow-400"
+    if (match.kda >= 1) return "text-orange-400"
     return "text-red-400"
   }
 
   // Función para determinar badge de rendimiento
   const getPerformanceBadge = (match: Match) => {
-    if (match.kda >= 5) return { text: "ÉPICO", color: "bg-purple-500" }
-    if (match.kda >= 3) return { text: "EXCELENTE", color: "bg-green-500" }
-    if (match.kda >= 2) return { text: "BUENO", color: "bg-blue-500" }
-    if (match.kda >= 1) return { text: "REGULAR", color: "bg-yellow-500" }
-    return { text: "DIFÍCIL", color: "bg-red-500" }
+    if (isRemakeOrAFK(match)) return { text: "REMAKE", color: "bg-gray-500" }
+    if (match.kda >= 5) return { text: "EPIC", color: "bg-purple-500" }
+    if (match.kda >= 3) return { text: "EXCELLENT", color: "bg-green-500" }
+    if (match.kda >= 2) return { text: "GOOD", color: "bg-blue-500" }
+    if (match.kda >= 1) return { text: "AVERAGE", color: "bg-yellow-500" }
+    return { text: "TOUGH", color: "bg-red-500" }
   }
 
   return (
     <section className="container mx-auto py-16">
       <div className="text-center mb-12">
-        <h3 className="text-4xl md:text-5xl font-black mb-4 gradient-text">Historial de Partidas</h3>
+        <h3 className="text-4xl md:text-5xl font-black mb-4 gradient-text">Match History</h3>
         <p className="text-lg text-muted-foreground mb-6">
-          Análisis detallado de tu rendimiento reciente 
+          Detailed analysis of your recent performance 
           <span className="text-primary font-medium">
-            ({displayedMatches.length} de {matches.length} partidas)
+            ({displayedMatches.length} of {matches.length} matches)
           </span>
         </p>
         
@@ -109,20 +120,20 @@ export function RecentGames({ matches }: RecentGamesProps) {
             onClick={() => setExpandedCards(new Set(displayedMatches.map((_, i) => i)))}
             className="px-4 py-2 bg-primary/20 hover:bg-primary/30 rounded-xl text-primary font-medium transition-colors duration-200"
           >
-            Expandir Visibles
+            Expand Visible
           </button>
           <button
             onClick={() => setExpandedCards(new Set())}
             className="px-4 py-2 bg-muted/20 hover:bg-muted/30 rounded-xl text-muted-foreground font-medium transition-colors duration-200"
           >
-            Colapsar Todo
+            Collapse All
           </button>
           {hasMoreMatches && (
             <button
               onClick={loadMoreMatches}
               className="px-4 py-2 bg-secondary/20 hover:bg-secondary/30 rounded-xl text-secondary font-medium transition-colors duration-200"
             >
-              Ver Más ({Math.min(MATCHES_PER_PAGE, matches.length - visibleMatches)} más)
+              View More ({Math.min(MATCHES_PER_PAGE, matches.length - visibleMatches)} more)
             </button>
           )}
           {canShowLess && (
@@ -130,7 +141,7 @@ export function RecentGames({ matches }: RecentGamesProps) {
               onClick={showLessMatches}
               className="px-4 py-2 bg-accent/20 hover:bg-accent/30 rounded-xl text-accent font-medium transition-colors duration-200"
             >
-              Mostrar Menos
+              Show Less
             </button>
           )}
         </div>
@@ -139,16 +150,25 @@ export function RecentGames({ matches }: RecentGamesProps) {
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8 items-start">
         {displayedMatches.map((match, index) => {
           const badge = getPerformanceBadge(match)
-          const kdaColor = getKDAColor(match.kda)
+          const kdaColor = getKDAColor(match)
           const isExpanded = expandedCards.has(index)
+          const isRemake = isRemakeOrAFK(match)
+          
+          // Determinar colores basado en si es remake/AFK o victoria/derrota
+          const getMatchColors = () => {
+            if (isRemake) {
+              return "border-gray-500/30 bg-gradient-to-br from-gray-500/10 to-transparent"
+            }
+            return match.win 
+              ? "border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent" 
+              : "border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent"
+          }
           
           return (
             <div
               key={index}
               className={`relative p-6 rounded-2xl glass-card transition-all duration-500 ease-out ${
-                match.win 
-                  ? "border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent" 
-                  : "border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent"
+                getMatchColors()
               } hover:border-primary/40 hover:shadow-lg ${
                 isExpanded ? 'shadow-xl border-primary/30' : ''
               }`}
@@ -160,9 +180,13 @@ export function RecentGames({ matches }: RecentGamesProps) {
                     {badge.text}
                   </div>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    match.win ? "bg-green-500 text-white" : "bg-red-500 text-white"  
+                    isRemake 
+                      ? "bg-gray-500 text-white" 
+                      : match.win 
+                        ? "bg-green-500 text-white" 
+                        : "bg-red-500 text-white"  
                   }`}>
-                    {match.win ? "W" : "L"}
+                    {isRemake ? "R" : match.win ? "W" : "L"}
                   </div>
                 </div>
                 <button 
@@ -235,24 +259,39 @@ export function RecentGames({ matches }: RecentGamesProps) {
                     <div className="w-full bg-border/30 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full transition-all duration-300 ${
+                          isRemake ? "bg-gray-400" :
                           match.kda >= 3 ? "bg-green-400" :
                           match.kda >= 2 ? "bg-yellow-400" :
                           match.kda >= 1 ? "bg-orange-400" : "bg-red-400"
                         }`}
-                        style={{ width: `${Math.min(100, (match.kda / 5) * 100)}%` }}
+                        style={{ width: `${isRemake ? 50 : Math.min(100, (match.kda / 5) * 100)}%` }}
                       ></div>
                     </div>
                   </div>
 
+                  {/* Mensaje especial para remakes/AFK */}
+                  {isRemake && (
+                    <div className="p-4 rounded-2xl bg-gray-500/10 border border-gray-500/20 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-sm font-bold text-gray-400 uppercase tracking-wide">Remake/AFK Game</span>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        This game ended early or had connection issues. Stats may be incomplete.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Stats Grid Principal */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Daño</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Damage</p>
                       <p className="text-lg font-bold text-foreground">{(match.damage_dealt / 1000).toFixed(1)}k</p>
                       <p className="text-xs text-primary">{match.dpm.toFixed(0)} DPM</p>
                     </div>
                     <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Oro</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Gold</p>
                       <p className="text-lg font-bold text-foreground">{(match.gold_earned / 1000).toFixed(1)}k</p>
                       <p className="text-xs text-secondary">{match.gpm.toFixed(0)} GPM</p>
                     </div>
@@ -266,14 +305,14 @@ export function RecentGames({ matches }: RecentGamesProps) {
                       <p className="text-xs text-muted-foreground">{match.cs_per_min.toFixed(1)}/min</p>
                     </div>
                     <div className="p-2 bg-background/20 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Visión</p>
+                      <p className="text-xs text-muted-foreground">Vision</p>
                       <p className="text-sm font-bold text-foreground">{match.vision_score}</p>
                       <p className="text-xs text-accent">Score</p>
                     </div>
                     <div className="p-2 bg-background/20 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Daño Rec.</p>
+                      <p className="text-xs text-muted-foreground">Dmg Taken</p>
                       <p className="text-sm font-bold text-foreground">{(match.damage_taken / 1000).toFixed(1)}k</p>
-                      <p className="text-xs text-muted-foreground">Tanque</p>
+                      <p className="text-xs text-muted-foreground">Tank</p>
                     </div>
                   </div>
                 </div>
@@ -289,7 +328,7 @@ export function RecentGames({ matches }: RecentGamesProps) {
           {/* Indicador de progreso */}
           <div className="w-full max-w-xs mx-auto">
             <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>Partidas mostradas</span>
+              <span>Matches shown</span>
               <span>{displayedMatches.length} / {matches.length}</span>
             </div>
             <div className="w-full bg-border/30 rounded-full h-2">
@@ -307,7 +346,7 @@ export function RecentGames({ matches }: RecentGamesProps) {
                 onClick={loadMoreMatches}
                 className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-2xl transition-all duration-200 hover:scale-105 shadow-lg"
               >
-                Cargar Más Partidas
+                Load More Matches
                 <span className="ml-2 text-sm opacity-80">
                   (+{Math.min(MATCHES_PER_PAGE, matches.length - visibleMatches)})
                 </span>
@@ -318,7 +357,7 @@ export function RecentGames({ matches }: RecentGamesProps) {
                 onClick={showLessMatches}
                 className="px-6 py-3 bg-muted hover:bg-muted/80 text-muted-foreground font-medium rounded-2xl transition-all duration-200 hover:scale-105"
               >
-                Mostrar Solo Recientes
+                Show Recent Only
               </button>
             )}
           </div>

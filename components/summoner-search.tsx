@@ -27,21 +27,41 @@ export function SummonerSearch({ onDataFetched }: SummonerSearchProps) {
     // Separar "Nombre#TAG"
     const [name, tag] = summonerName.split("#")
     if (!name || !tag) {
-      setError("Por favor usa el formato Nombre#TAG (ej: Hide on bush#KR1)")
+      setError("Please use the format Name#TAG (ex: Hide on bush#KR1)")
       return
     }
-
+    
     setIsLoading(true)
     try {
-      console.log("[v0] 🔍 Consultando Lambda con:", name, tag)
+      console.log("[v0] 🔍 Searching for:", name, tag)
       const data = await fetchData(name.trim(), tag.trim())
 
-      console.log("[v0] ✅ Datos obtenidos:", data)
+      console.log("[v0] ✅ Data obtained:", data)
       setResult(data)
-      onDataFetched(data) // Enviar datos al componente padre
+      onDataFetched(data) // Send data to parent component
     } catch (err: any) {
-      console.error("❌ Error al buscar:", err)
-      setError(err.message || "Hubo un error al buscar tus datos.")
+      console.error("❌ Search error:", err)
+      
+      // Handle different types of errors with user-friendly messages
+      let userMessage = "There was an error searching for your data."
+      
+      if (err.message.includes("404") || err.message.includes("not found")) {
+        userMessage = "Summoner not found. Please check the name and tag format (Name#TAG)."
+      } else if (err.message.includes("400") || err.message.includes("Bad Request")) {
+        userMessage = "Invalid request format. Please use Name#TAG format."
+      } else if (err.message.includes("429") || err.message.includes("rate limit")) {
+        userMessage = "Too many requests. Please wait a moment and try again."
+      } else if (err.message.includes("500") || err.message.includes("Internal Server")) {
+        userMessage = "Our servers are experiencing issues. Please try again in a few minutes."
+      } else if (err.message.includes("503") || err.message.includes("Service Unavailable")) {
+        userMessage = "Riot Games API is temporarily unavailable. Please try again later."
+      } else if (err.message.includes("timeout") || err.message.includes("ETIMEDOUT")) {
+        userMessage = "Request timed out. Please check your connection and try again."
+      } else if (!navigator.onLine) {
+        userMessage = "No internet connection. Please check your network and try again."
+      }
+      
+      setError(userMessage)
     } finally {
       setIsLoading(false)
     }
@@ -56,11 +76,11 @@ export function SummonerSearch({ onDataFetched }: SummonerSearchProps) {
         className="max-w-3xl mx-auto"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-black mb-4 gradient-text">
-            Rift Rewind
+          <h1 className="text-4xl md:text-6xl font-black mb-4 gradient-text leading-tight">
+            League in Review
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground">
-            Descubre tus estadísticas, logros y momentos épicos
+            Discover your stats, achievements, and epic moments
           </p>
         </div>
 
@@ -71,7 +91,7 @@ export function SummonerSearch({ onDataFetched }: SummonerSearchProps) {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="NombreDeInvocador#TAG"
+                  placeholder="SummonerName#TAG"
                   value={summonerName}
                   onChange={(e) => setSummonerName(e.target.value)}
                   className="pl-12 h-14 text-lg bg-background/50 border-primary/30 focus:border-primary"
@@ -87,22 +107,31 @@ export function SummonerSearch({ onDataFetched }: SummonerSearchProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Buscando...
+                                            Searching...
                   </>
                 ) : (
                   <>
                     <Search className="w-5 h-5 mr-2" />
-                    Buscar
+                                            Analyze
                   </>
                 )}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4 text-center">
-              Ejemplo: Hide on bush#KR1, Faker#KR1
+              For example: HideOnBush#KR1, Faker#KR1
             </p>
 
             {error && (
-              <p className="text-red-400 mt-4 text-center">{error}</p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-center"
+              >
+                <p className="text-red-400 font-medium">{error}</p>
+                <p className="text-xs text-red-400/70 mt-1">
+                  Please try again or contact support if the problem persists
+                </p>
+              </motion.div>
             )}
 
           </div>

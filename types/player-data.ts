@@ -38,13 +38,16 @@ export interface Summary {
 }
 
 export interface Recap {
-  strengths: string[]
+  strengths: string
   improvements: {
     issue: string
     drill: string
   }[]
   next_match_tip: string
   confidence: string
+  style?: string
+  trends?: string[]
+  recommended_roles?: string[]
 }
 
 export interface PlayerData {

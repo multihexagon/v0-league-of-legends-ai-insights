@@ -51,7 +51,7 @@ export function ChampionShowcase({ matches }: ChampionShowcaseProps) {
       kda: (champ.totalKda / champ.games).toFixed(1),
       mastery: Math.min(7, Math.floor(champ.games / 2) + 4), // Simulación de maestría
       image: champ.splashImage, // Usar splash art para imágenes grandes
-      badge: champ.games >= 3 ? "Más Jugado" : champ.winRate >= 70 ? "MVP" : "Carry",
+      badge: champ.games >= 3 ? "Most Played" : champ.winRate >= 70 ? "MVP" : "Carry",
       icon: champ.games >= 3 ? Crown : champ.winRate >= 70 ? Star : Flame,
     }))
     .sort((a, b) => b.games - a.games)
@@ -66,8 +66,8 @@ export function ChampionShowcase({ matches }: ChampionShowcaseProps) {
         transition={{ duration: 0.6 }}
         className="text-center mb-20"
       >
-        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">{"Tus Campeones"}</h2>
-        <p className="text-xl md:text-2xl text-muted-foreground">{"Las leyendas que dominaste"}</p>
+        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">Your Champions</h2>
+        <p className="text-xl md:text-2xl text-muted-foreground">The legends you mastered</p>
       </motion.div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -115,7 +115,7 @@ export function ChampionShowcase({ matches }: ChampionShowcaseProps) {
                 <div className="grid grid-cols-3 gap-6 mb-6">
                   <div className="text-center">
                     <div className="text-3xl font-black text-primary mb-1">{champion.games}</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider">{"Partidas"}</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">{"Games"}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-black text-secondary mb-1">{champion.winRate}%</div>
@@ -129,7 +129,7 @@ export function ChampionShowcase({ matches }: ChampionShowcaseProps) {
 
                 {/* Mastery indicator */}
                 <div className="flex items-center justify-between pt-6 border-t border-border/30">
-                  <span className="text-sm text-muted-foreground uppercase tracking-wider">{"Maestría"}</span>
+                  <span className="text-sm text-muted-foreground uppercase tracking-wider">{"Mastery"}</span>
                   <div className="flex gap-1.5">
                     {Array.from({ length: champion.mastery }).map((_, i) => (
                       <motion.div

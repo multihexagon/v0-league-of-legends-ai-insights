@@ -5,10 +5,12 @@ import { SummonerSearch } from "@/components/summoner-search"
 import { HeroSection } from "@/components/hero-section"
 import { StatsOverview } from "@/components/stats-overview"
 import { ChampionShowcase } from "@/components/champion-showcase"
+import { AIInsights } from "@/components/ai-insights"
 import { HighlightsSection } from "@/components/highlights-section"
 import { RecentGames } from "@/components/recent-games"
 import { VsComparison } from "@/components/vs-comparison"
 import { ShareSection } from "@/components/share-section"
+import { ProgressionAnalysis } from "@/components/progression-analysis"
 
 export default function Home() {
   const [playerData, setPlayerData] = useState<any>(null)
@@ -50,21 +52,32 @@ export default function Home() {
           <HeroSection 
             summary={playerData.summary} 
             topChampion={getTopChampion(playerData.matches)}
+            recap={playerData.recap}
           />
           <StatsOverview summary={playerData.summary} />
           <ChampionShowcase matches={playerData.matches} />
+          <AIInsights recap={playerData.recap} />
           <HighlightsSection 
             recap={playerData.recap} 
             matches={playerData.matches}
             summary={playerData.summary}
           />
           <RecentGames matches={playerData.matches} />
+          <ProgressionAnalysis 
+            matches={playerData.matches}
+            playerName={playerData.summary?.summoner_name || "Summoner"}
+          />
           <VsComparison 
             summary={playerData.summary} 
-            playerName={playerData.summary?.summoner_name || "Tú"}
+            playerName={playerData.summary?.summoner_name || "You"}
             topChampion={getTopChampion(playerData.matches)}
           />
-          <ShareSection recap={playerData.recap} />
+          <ShareSection 
+            recap={playerData.recap}
+            playerName={playerData.summary?.summoner_name || "Summoner"}
+            summary={playerData.summary}
+            matches={playerData.matches}
+          />
         </>
       )}
     </main>

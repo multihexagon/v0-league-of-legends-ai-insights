@@ -5,10 +5,13 @@ import { Trophy, TrendingUp, Zap, Target, Award, Flame } from "lucide-react"
 
 interface HighlightsSectionProps {
   recap: {
-    strengths: string[]
+    strengths: string
     improvements: { issue: string; drill: string }[]
     next_match_tip: string
     confidence: string
+    style?: string
+    trends?: string[]
+    recommended_roles?: string[]
   }
   matches: Array<{
     champion: string
@@ -60,19 +63,79 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
   // Si no hay matches, usar datos del summary para mostrar highlights básicos
   const hasMatches = matches && matches.length > 0
 
-  // Calcular achievements reales basados en los datos
-  const totalWins = hasMatches ? matches.filter(match => match.win).length : Math.round(summary.games * summary.win_rate)
-  const bestKDA = hasMatches ? Math.max(...matches.map(match => match.kda)) : summary.avg_kda
-  const totalDamage = hasMatches ? matches.reduce((sum, match) => sum + match.damage_dealt, 0) : summary.avg_damage_dealt * summary.games
-  const totalGold = hasMatches ? matches.reduce((sum, match) => sum + match.gold_earned, 0) : summary.avg_gold * summary.games
-  const perfectGames = hasMatches ? matches.filter(match => match.deaths === 0).length : Math.round(summary.games * 0.1) // Estimación
-  const highKillGames = hasMatches ? matches.filter(match => match.kills >= 10).length : Math.round(summary.games * 0.3) // Estimación
+  // Función para detectar partidas remake/AFK (misma lógica que en recent-games)
+  const isValidMatch = (match: any) => {
+    return !(match.kills === 0 && 
+             match.deaths === 0 && 
+             match.assists === 0 && 
+             match.damage_dealt === 0 && 
+             match.gold_earned === 0)
+  }
+
+  // Filtrar partidas válidas (excluyendo remakes)
+  const validMatches = hasMatches ? matches.filter(isValidMatch) : []
+
+  // Calcular achievements reales basados en los datos (excluyendo remakes)
+  const totalWins = hasMatches ? validMatches.filter(match => match.win).length : Math.round(summary.games * summary.win_rate)
+  const bestKDA = hasMatches && validMatches.length > 0 ? Math.max(...validMatches.map(match => match.kda)) : summary.avg_kda
+  const totalDamage = hasMatches ? validMatches.reduce((sum, match) => sum + match.damage_dealt, 0) : summary.avg_damage_dealt * summary.games
+  const totalGold = hasMatches ? validMatches.reduce((sum, match) => sum + match.gold_earned, 0) : summary.avg_gold * summary.games
+  const perfectGames = hasMatches ? validMatches.filter(match => match.deaths === 0).length : Math.round(summary.games * 0.1)
+  const highKillGames = hasMatches ? validMatches.filter(match => match.kills >= 10).length : Math.round(summary.games * 0.3)
+
+  // Generar highlights dinámicos usando las tendencias y fortalezas del recap
+  const generateDynamicHighlights = () => {
+    const dynamicHighlights = []
+    
+    // Highlight principal basado en la primera fortaleza
+    if (recap.strengths && recap.strengths.length > 0) {
+      dynamicHighlights.push({
+        icon: Trophy,
+        title: "Top Strength",
+        subtitle: recap.strengths[0],
+        description: "Your strongest point this season",
+        stats: "AI Insight",
+        gradient: "from-primary to-accent",
+        date: "Identified"
+      })
+    }
+
+    // Highlight de tendencias si están disponibles
+    if (recap.trends && recap.trends.length > 0) {
+      dynamicHighlights.push({
+        icon: TrendingUp,
+        title: "Performance Trend",
+        subtitle: recap.trends[0],
+        description: "Key pattern in your gameplay",
+        stats: "Trending",
+        gradient: "from-accent to-secondary",
+        date: "Current"
+      })
+    }
+
+    // Highlight del estilo de juego
+    if (recap.style) {
+      dynamicHighlights.push({
+        icon: Flame,
+        title: "Play Style",
+        subtitle: `${recap.style.charAt(0).toUpperCase() + recap.style.slice(1)} Player`,
+        description: "Your unique approach to the game",
+        stats: "Personality",
+        gradient: "from-secondary to-primary",
+        date: "Analysis"
+      })
+    }
+
+    return dynamicHighlights
+  }
+
+  const dynamicHighlights = generateDynamicHighlights()
   
-  // Encontrar la mejor partida o usar datos del summary
-  const bestMatch = hasMatches ? 
-    matches.reduce((best, current) => current.kda > best.kda ? current : best, matches[0] || {}) :
+  // Encontrar la mejor partida o usar datos del summary (excluyendo remakes)
+  const bestMatch = validMatches.length > 0 ? 
+    validMatches.reduce((best, current) => current.kda > best.kda ? current : best) :
     {
-      champion: 'Tu Mejor Campeón',
+      champion: 'Your Best Champion',
       kills: Math.round(summary.avg_kills * 1.5),
       deaths: Math.round(summary.avg_deaths * 0.7),
       assists: Math.round(summary.avg_assists * 1.3),
@@ -81,43 +144,50 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
       win: true
     }
   
-  // Calcular estadísticas del jugador
-  const avgDamage = hasMatches ? Math.round(totalDamage / matches.length) : Math.round(summary.avg_damage_dealt)
+  // Calcular estadísticas del jugador (usando solo partidas válidas)
+  const avgDamage = hasMatches && validMatches.length > 0 ? Math.round(totalDamage / validMatches.length) : Math.round(summary.avg_damage_dealt)
+  
+  // Combinar highlights dinámicos con datos estadísticos
   const highlights = [
-    {
-      icon: Trophy,
-      title: "Mejor Partida",
-      subtitle: `${bestMatch.champion || 'Campeón Favorito'}`,
-      description: `${bestMatch.kills || 0}/${bestMatch.deaths || 0}/${bestMatch.assists || 0} - KDA ${bestMatch.kda?.toFixed(1) || 'N/A'}`,
-      stats: `${bestMatch.damage_dealt?.toLocaleString() || '0'} daño`,
-      gradient: "from-secondary to-secondary/50",
-      date: bestMatch.win ? "Victoria" : "Derrota",
-    },
-    {
-      icon: TrendingUp,
-      title: "Próxima Partida",
-      subtitle: "Tip del Coach",
-      description: recap.next_match_tip,
-      stats: "Recomendación IA",
-      gradient: "from-primary to-primary/50",
-      date: "Para mejorar",
-    },
-    {
-      icon: Flame,
-      title: "Rendimiento General",
-      subtitle: `${Math.round(summary.win_rate * 100)}% Win Rate`,
-      description: `${avgDamage.toLocaleString()} daño promedio por partida`,
-      stats: `${summary.avg_kda.toFixed(1)} KDA`,
-      gradient: "from-accent to-accent/50",
-      date: `${summary.games} partidas`,
-    },
-  ]
+    // Usar highlights dinámicos del recap si están disponibles
+    ...dynamicHighlights,
+    // Agregar highlights estadísticos si hay espacio
+    ...(dynamicHighlights.length < 3 ? [
+      {
+        icon: Trophy,
+        title: "Best Match",
+        subtitle: `${bestMatch.champion || 'Favorite Champion'}`,
+        description: `${bestMatch.kills || 0}/${bestMatch.deaths || 0}/${bestMatch.assists || 0} - KDA ${bestMatch.kda?.toFixed(1) || 'N/A'}`,
+        stats: `${bestMatch.damage_dealt?.toLocaleString() || '0'} damage`,
+        gradient: "from-secondary to-secondary/50",
+        date: bestMatch.win ? "Victory" : "Defeat",
+      },
+      {
+        icon: TrendingUp,
+        title: "Next Match",
+        subtitle: "Coach Tip", 
+        description: recap.next_match_tip,
+        stats: "AI Recommendation",
+        gradient: "from-primary to-primary/50",
+        date: "To improve",
+      },
+      {
+        icon: Flame,
+        title: "Overall Performance",
+        subtitle: `${Math.round(summary.win_rate * 100)}% Win Rate`,
+        description: `${avgDamage.toLocaleString()} average damage per match`,
+        stats: `${summary.avg_kda.toFixed(1)} KDA`,
+        gradient: "from-accent to-accent/50",
+        date: `${summary.games} games`,
+      }
+    ] : [])
+  ].slice(0, 3) // Limitar a máximo 3 highlights
 
   const achievements = [
-    { icon: Trophy, label: "Victorias", count: totalWins },
-    { icon: Target, label: "Mejor KDA", count: bestKDA.toFixed(1) },
-    { icon: Flame, label: "Partidas 10+ Kills", count: highKillGames },
-    { icon: Award, label: "Juegos Perfectos", count: perfectGames },
+    { icon: Trophy, label: "Victories", count: totalWins },
+    { icon: Target, label: "Best KDA", count: bestKDA.toFixed(1) },
+    { icon: Flame, label: "10+ Kill Games", count: highKillGames },
+    { icon: Award, label: "Perfect Games", count: perfectGames },
   ]
 
   return (
@@ -129,8 +199,8 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
         transition={{ duration: 0.6 }}
         className="text-center mb-20"
       >
-        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">{"Momentos Épicos"}</h2>
-        <p className="text-xl md:text-2xl text-muted-foreground">{"Los highlights que definen tu año"}</p>
+        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">{"Epic Moments"}</h2>
+        <p className="text-xl md:text-2xl text-muted-foreground">{"The highlights that define your year"}</p>
       </motion.div>
 
       {/* Main highlights */}

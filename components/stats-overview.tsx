@@ -14,13 +14,13 @@ export function StatsOverview({ summary }: StatsOverviewProps) {
 
   return (
     <section className="container mx-auto">
-      <h2 className="text-3xl font-bold mb-6 mt-6 text-center">Resumen General</h2>
+      <h2 className="text-3xl font-bold mb-6 mt-6 text-center">General Overview</h2>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Stat label="Winrate" value={`${(summary.win_rate * 100).toFixed(0)}%`} />
         <Stat label="KDA" value={summary.avg_kda.toFixed(2)} />
         <Stat label="CS/min" value={summary.avg_cs_per_min.toFixed(2)} />
-        <Stat label="Daño/min" value={summary.avg_dpm.toFixed(0)} />
-        <Stat label="Oro" value={summary.avg_gold.toFixed(0)} />
+        <Stat label="Damage/min" value={summary.avg_dpm.toFixed(0)} />
+        <Stat label="Gold" value={summary.avg_gold.toFixed(0)} />
       </div>
     </section>
   )

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Swords, Trophy, Target, Zap, Search, Loader2, Coins, Eye, Shield, Crosshair, Star } from "lucide-react"
+import { Swords, Trophy, Target, Zap, Search, Loader2, Coins, Eye, Shield, Crosshair, Star, Award, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -43,7 +43,7 @@ interface VsComparisonProps {
   }
 }
 
-export function VsComparison({ summary, playerName = "Tú", topChampion }: VsComparisonProps) {
+export function VsComparison({ summary, playerName = "You", topChampion }: VsComparisonProps) {
   if (!summary) return null
   
   const [opponentName, setOpponentName] = useState("")
@@ -55,7 +55,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
 
   const player1 = {
     name: playerName,
-    rank: summary.rank || "Tu Rango",
+    rank: summary.rank || "Your Rank",
     winRate: Math.round(summary.win_rate * 100),
     kda: summary.avg_kda.toFixed(1),
     games: summary.games,
@@ -64,17 +64,18 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
 
   const player2 = opponentData ? {
     name: opponentData.name,
-    rank: opponentData.summary.rank || "Sin Rango",
+    rank: opponentData.summary.rank || "No Rank",
     winRate: Math.round(opponentData.summary.win_rate * 100),
     kda: opponentData.summary.avg_kda.toFixed(1),
     games: opponentData.summary.games,
     image: opponentData.topChampion?.image || "/placeholder.svg",
   } : null
 
-  // Organizar estadísticas por categorías
+  // Organize statistics by categories
   const statCategories = player2 && opponentData ? [
     {
-      category: "🏆 Rendimiento General",
+      category: "Overall Performance",
+      categoryIcon: Trophy,
       stats: [
         { 
           icon: Trophy, 
@@ -92,22 +93,15 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
           winner: parseFloat(player1.kda) >= parseFloat(player2.kda) ? 1 : 2,
           isHigherBetter: true
         },
-        { 
-          icon: Zap, 
-          label: "Partidas", 
-          p1: player1.games.toLocaleString(), 
-          p2: player2.games.toLocaleString(), 
-          winner: player1.games >= player2.games ? 1 : 2,
-          isHigherBetter: true
-        },
       ]
     },
     {
-      category: "⚔️ Combate",
+      category: "Combat",
+      categoryIcon: Swords,
       stats: [
         { 
           icon: Crosshair, 
-          label: "Kills/Partida", 
+          label: "Kills/Game", 
           p1: summary.avg_kills.toFixed(1), 
           p2: opponentData.summary.avg_kills.toFixed(1), 
           winner: summary.avg_kills >= opponentData.summary.avg_kills ? 1 : 2,
@@ -115,7 +109,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
         },
         { 
           icon: Shield, 
-          label: "Deaths/Partida", 
+          label: "Deaths/Game", 
           p1: summary.avg_deaths.toFixed(1), 
           p2: opponentData.summary.avg_deaths.toFixed(1), 
           winner: summary.avg_deaths <= opponentData.summary.avg_deaths ? 1 : 2,
@@ -123,7 +117,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
         },
         { 
           icon: Star, 
-          label: "Assists/Partida", 
+          label: "Assists/Game", 
           p1: summary.avg_assists.toFixed(1), 
           p2: opponentData.summary.avg_assists.toFixed(1), 
           winner: summary.avg_assists >= opponentData.summary.avg_assists ? 1 : 2,
@@ -132,7 +126,8 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
       ]
     },
     {
-      category: "💰 Economía y Farm",
+      category: "Economy & Farm",
+      categoryIcon: Coins,
       stats: [
         { 
           icon: Target, 
@@ -144,7 +139,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
         },
         { 
           icon: Coins, 
-          label: "Oro Promedio", 
+          label: "Average Gold", 
           p1: `${(summary.avg_gold / 1000).toFixed(1)}k`, 
           p2: `${(opponentData.summary.avg_gold / 1000).toFixed(1)}k`, 
           winner: summary.avg_gold >= opponentData.summary.avg_gold ? 1 : 2,
@@ -152,7 +147,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
         },
         { 
           icon: Zap, 
-          label: "Daño/min", 
+          label: "Damage/min", 
           p1: summary.avg_dpm.toFixed(0), 
           p2: opponentData.summary.avg_dpm.toFixed(0), 
           winner: summary.avg_dpm >= opponentData.summary.avg_dpm ? 1 : 2,
@@ -161,7 +156,8 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
       ]
     },
     ...(summary.avg_vision_score && opponentData.summary.avg_vision_score ? [{
-      category: "👁️ Visión y Utilidad",
+      category: "Vision & Utility",
+      categoryIcon: Eye,
       stats: [
         { 
           icon: Eye, 
@@ -197,14 +193,41 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
       const data = await response.json()
       
       if (!response.ok) {
-        throw new Error(data.error || 'Error al buscar el jugador')
+        // Handle specific HTTP status codes
+        let userMessage = 'Error searching for player'
+        
+        if (response.status === 404) {
+          userMessage = 'Player not found. Please check the name and tag format.'
+        } else if (response.status === 400) {
+          userMessage = 'Invalid request format. Please use Name#TAG format.'
+        } else if (response.status === 429) {
+          userMessage = 'Too many requests. Please wait a moment and try again.'
+        } else if (response.status >= 500) {
+          userMessage = 'Server error. Please try again in a few minutes.'
+        } else if (data.error) {
+          userMessage = data.error
+        }
+        
+        throw new Error(userMessage)
       }
 
       setOpponentData(data)
       setShowComparison(true)
     } catch (error) {
       console.error('Error searching for opponent:', error)
-      setSearchError(error instanceof Error ? error.message : 'Error al buscar el jugador')
+      
+      // Handle network and other errors
+      let userMessage = 'Error searching for player'
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        userMessage = 'Network error. Please check your connection and try again.'
+      } else if (error instanceof Error) {
+        userMessage = error.message
+      } else if (!navigator.onLine) {
+        userMessage = 'No internet connection. Please check your network.'
+      }
+      
+      setSearchError(userMessage)
     } finally {
       setIsSearching(false)
     }
@@ -219,8 +242,8 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
         transition={{ duration: 0.6 }}
         className="text-center mb-20"
       >
-        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">Modo VS</h2>
-        <p className="text-xl md:text-2xl text-muted-foreground">Compara tu progreso con tus amigos</p>
+        <h2 className="text-5xl md:text-7xl font-black mb-6 gradient-text">VS Mode</h2>
+        <p className="text-xl md:text-2xl text-muted-foreground">Compare your progress with your friends</p>
       </motion.div>
 
       <div className="max-w-6xl mx-auto">
@@ -243,7 +266,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Nombre del invocador..."
+                      placeholder="Summoner name..."
                       value={opponentName}
                       onChange={(e) => setOpponentName(e.target.value)}
                       className="pl-12 h-12 bg-background/50 border-primary/30 focus:border-primary"
@@ -269,18 +292,18 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                     {isSearching ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Buscando...
+                        Searching...
                       </>
                     ) : (
                       <>
                         <Swords className="w-4 h-4 mr-2" />
-                        Comparar
+                        Compare
                       </>
                     )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Ejemplo: NombreJugador + EUW1
+                  Example: PlayerName + EUW1
                 </p>
               </div>
             </form>
@@ -320,7 +343,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                         <Trophy className="w-4 h-4" />
                         <span>{player1.winRate}% WR</span>
                         <span>•</span>
-                        <span>{player1.games} partidas</span>
+                        <span>{player1.games} games</span>
                       </div>
                     </div>
                   </motion.div>
@@ -361,7 +384,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                         <Trophy className="w-4 h-4" />
                         <span>{player2.winRate}% WR</span>
                         <span>•</span>
-                        <span>{player2.games} partidas</span>
+                        <span>{player2.games} games</span>
                       </div>
                     </div>
                   </motion.div>
@@ -371,7 +394,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                 <div className="space-y-12">
                   {statCategories.map((category, categoryIndex) => (
                     <div key={category.category} className="space-y-6">
-                      {/* Título de categoría */}
+                      {/* Category title */}
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -379,7 +402,10 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                         transition={{ duration: 0.5, delay: 0.6 + categoryIndex * 0.2 }}
                         className="text-center"
                       >
-                        <h4 className="text-2xl font-bold text-foreground mb-2">{category.category}</h4>
+                        <div className="flex items-center justify-center gap-3 mb-2">
+                          <category.categoryIcon className="w-6 h-6 text-primary" />
+                          <h4 className="text-2xl font-bold text-foreground">{category.category}</h4>
+                        </div>
                         <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto rounded-full"></div>
                       </motion.div>
                       
@@ -402,7 +428,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                               >
                                 <span className="text-2xl md:text-3xl">{stat.p1}</span>
                                 {stat.winner === 1 && (
-                                  <div className="text-xs text-primary/70 mt-1">GANADOR</div>
+                                  <div className="text-xs text-primary/70 mt-1">WINNER</div>
                                 )}
                               </div>
 
@@ -410,7 +436,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                                 <Icon className="w-6 h-6 text-foreground/60 mx-auto mb-2" />
                                 <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">{stat.label}</p>
                                 {!stat.isHigherBetter && (
-                                  <p className="text-xs text-accent/60 mt-1">Menor es mejor</p>
+                                  <p className="text-xs text-accent/60 mt-1">The lower the better</p>
                                 )}
                               </div>
 
@@ -419,7 +445,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                               >
                                 <span className="text-2xl md:text-3xl">{stat.p2}</span>
                                 {stat.winner === 2 && (
-                                  <div className="text-xs text-secondary/70 mt-1">GANADOR</div>
+                                  <div className="text-xs text-secondary/70 mt-1">WINNER</div>
                                 )}
                               </div>
                             </motion.div>
@@ -430,7 +456,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                   ))}
                 </div>
 
-                {/* Resumen de victorias */}
+                {/* Wins summary */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -448,22 +474,42 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                     
                     return (
                       <div className="text-center space-y-4">
-                        <h3 className="text-3xl font-black text-foreground">🏆 Resultado Final</h3>
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                          <Award className="w-8 h-8 text-primary" />
+                          <h3 className="text-3xl font-black text-foreground">Final Result</h3>
+                          <Award className="w-8 h-8 text-primary" />
+                        </div>
                         <div className="flex justify-center items-center gap-8">
-                          <div className={`text-center p-4 rounded-2xl ${overallWinner === 1 ? 'bg-primary/20 border-2 border-primary' : 'bg-muted/10'}`}>
+                          <div className={`text-center p-6 rounded-2xl ${overallWinner === 1 ? 'bg-primary/20 border-2 border-primary' : 'bg-muted/10'}`}>
                             <p className="text-lg font-bold text-foreground">{player1.name}</p>
-                            <p className="text-2xl font-black text-primary">{player1Wins} victorias</p>
-                            {overallWinner === 1 && <p className="text-sm text-primary font-bold mt-1">🎉 GANADOR GENERAL</p>}
+                            <p className="text-2xl font-black text-primary">{player1Wins} wins</p>
+                            {overallWinner === 1 && (
+                              <div className="flex items-center justify-center gap-2 mt-2">
+                                <Trophy className="w-4 h-4 text-primary" />
+                                <p className="text-sm text-primary font-bold">OVERALL WINNER</p>
+                              </div>
+                            )}
                           </div>
-                          <div className="text-6xl">VS</div>
-                          <div className={`text-center p-4 rounded-2xl ${overallWinner === 2 ? 'bg-secondary/20 border-2 border-secondary' : 'bg-muted/10'}`}>
+                          <div className="flex items-center justify-center">
+                            <Swords className="w-12 h-12 text-muted-foreground" />
+                          </div>
+                          <div className={`text-center p-6 rounded-2xl ${overallWinner === 2 ? 'bg-secondary/20 border-2 border-secondary' : 'bg-muted/10'}`}>
                             <p className="text-lg font-bold text-foreground">{player2.name}</p>
-                            <p className="text-2xl font-black text-secondary">{player2Wins} victorias</p>
-                            {overallWinner === 2 && <p className="text-sm text-secondary font-bold mt-1">🎉 GANADOR GENERAL</p>}
+                            <p className="text-2xl font-black text-secondary">{player2Wins} wins</p>
+                            {overallWinner === 2 && (
+                              <div className="flex items-center justify-center gap-2 mt-2">
+                                <Trophy className="w-4 h-4 text-secondary" />
+                                <p className="text-sm text-secondary font-bold">OVERALL WINNER</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                         {overallWinner === 0 && (
-                          <p className="text-xl font-bold text-accent">🤝 ¡Empate perfecto!</p>
+                          <div className="flex items-center justify-center gap-3 mt-6">
+                            <Users className="w-6 h-6 text-accent" />
+                            <p className="text-xl font-bold text-accent">Perfect Tie!</p>
+                            <Users className="w-6 h-6 text-accent" />
+                          </div>
                         )}
                       </div>
                     )
@@ -489,7 +535,7 @@ export function VsComparison({ summary, playerName = "Tú", topChampion }: VsCom
                     className="neon-glow bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   >
                     <Search className="w-5 h-5 mr-2" />
-                    Buscar Otro Invocador
+                    Search Another Summoner
                   </Button>
                 </motion.div>
               </div>
