@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Trophy, TrendingUp, Zap, Target, Award, Flame } from "lucide-react"
+import { Trophy, TrendingUp, Zap, Target, Award, Flame, HelpCircle, Sparkles, Crown } from "lucide-react"
+import { InfoTooltip } from "@/components/ui/info-tooltip"
 
 interface HighlightsSectionProps {
   recap: {
@@ -12,6 +13,8 @@ interface HighlightsSectionProps {
     style?: string
     trends?: string[]
     recommended_roles?: string[]
+    recommended_champions?: string[]
+    actionable_advice?: string[]
   }
   matches: Array<{
     champion: string
@@ -188,7 +191,11 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
     { icon: Target, label: "Best KDA", count: bestKDA.toFixed(1) },
     { icon: Flame, label: "10+ Kill Games", count: highKillGames },
     { icon: Award, label: "Perfect Games", count: perfectGames },
-  ]
+    // Nuevos achievements basados en recap
+    ...(recap.style ? [{ icon: Sparkles, label: "Play Style", count: recap.style.charAt(0).toUpperCase() + recap.style.slice(1) }] : []),
+    ...(recap.recommended_roles && recap.recommended_roles.length > 0 ? [{ icon: Crown, label: "Best Role", count: recap.recommended_roles[0] }] : []),
+    ...(recap.confidence ? [{ icon: TrendingUp, label: "AI Confidence", count: recap.confidence.charAt(0).toUpperCase() + recap.confidence.slice(1) }] : []),
+  ].slice(0, 6) // Limitar a máximo 6 achievements
 
   return (
     <section className="py-32 px-4 container mx-auto">
@@ -258,6 +265,17 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
       >
         {achievements.map((achievement, index) => {
           const Icon = achievement.icon
+          // Tooltips específicos para cada achievement
+          const tooltipContent = achievement.label === "Total Wins" ? 
+            `Has ganado ${achievement.count} partidas. ¡Sigue así para mejorar tu winrate!` :
+            achievement.label === "Best KDA" ?
+            `Tu mejor KDA fue ${achievement.count}. KDA alto indica excelente rendimiento en esa partida` :
+            achievement.label === "Perfect Games" ?
+            `Partidas sin muertes: ${achievement.count}. Indica excelente posicionamiento y supervivencia` :
+            achievement.label === "High Kill Games" ?
+            `Partidas con 10+ eliminaciones: ${achievement.count}. Muestra tu potencial de carry` :
+            `${achievement.label}: ${achievement.count}`
+          
           return (
             <motion.div
               key={achievement.label}
@@ -266,15 +284,60 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
               whileHover={{ scale: 1.1 }}
-              className="p-6 rounded-2xl glass-card text-center group cursor-pointer"
             >
-              <Icon className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-125 transition-transform" />
-              <div className="text-3xl font-black text-foreground mb-1">{achievement.count}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">{achievement.label}</div>
+              <InfoTooltip content={tooltipContent}>
+                <div className="p-6 rounded-2xl glass-card text-center group cursor-pointer">
+                  <Icon className="w-8 h-8 text-primary mx-auto mb-3 group-hover:scale-125 transition-transform" />
+                  <div className="text-3xl font-black text-foreground mb-1">{achievement.count}</div>
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">{achievement.label}</div>
+                    <HelpCircle className="w-3 h-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              </InfoTooltip>
             </motion.div>
           )
         })}
       </motion.div>
+
+      {/* Sección de Actionable Advice */}
+      {recap.actionable_advice && recap.actionable_advice.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-16"
+        >
+          <div className="text-center mb-12">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4">Ready to Level Up?</h3>
+            <p className="text-lg text-muted-foreground">AI-powered advice you can apply immediately</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recap.actionable_advice.map((advice, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.9 + index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                className="p-6 rounded-2xl glass-card hover:border-accent/50 transition-all"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-accent">{index + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground leading-relaxed">{advice}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </section>
   )
 }

@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Brain, TrendingUp, Target, AlertTriangle, Lightbulb, BookOpen } from "lucide-react"
+import { Brain, TrendingUp, Target, AlertTriangle, Lightbulb, BookOpen, HelpCircle, Sparkles, Crown, Zap } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 
 interface AIInsightsProps {
@@ -13,7 +14,21 @@ interface AIInsightsProps {
     style?: string
     trends?: string[]
     recommended_roles?: string[]
+    recommended_champions?: string[]
+    actionable_advice?: string[]
   }
+}
+
+// Tooltips informativos para cada tipo de insight
+const insightTooltips = {
+  strength: "Estas son tus fortalezas identificadas por IA. Aprovéchalas en futuras partidas",
+  improvement: "Áreas de mejora detectadas. Los drills te ayudarán a practicar específicamente",
+  strategy: "Consejos tácticos para tu próxima partida basados en tu estilo de juego",
+  roles: "Roles recomendados basados en tu rendimiento y preferencias de juego",
+  trends: "Patrones de rendimiento detectados en tus partidas recientes",
+  champions: "Campeones recomendados que se adaptan a tu estilo de juego actual",
+  actionable: "Consejos prácticos que puedes aplicar inmediatamente en tus próximas partidas",
+  style: "Tu estilo de juego identificado por IA basado en patrones de comportamiento"
 }
 
 export function AIInsights({ recap }: AIInsightsProps) {
@@ -31,17 +46,47 @@ export function AIInsights({ recap }: AIInsightsProps) {
       type: "strength" as const
     },
     
-    // Áreas de mejora principales
-    ...recap.improvements.slice(0, 2).map((improvement, index) => ({
-      icon: index === 0 ? AlertTriangle : Target,
-      title: `Improvement Area ${index + 1}`,
-      description: `${improvement.issue.charAt(0).toUpperCase() + improvement.issue.slice(1)}`,
-      highlight: improvement.drill,
-      color: index === 0 ? "chart-4" : "chart-3",
+    // Style insight (si está disponible)
+    ...(recap.style ? [{
+      icon: Sparkles,
+      title: "Play Style",
+      description: `Your identified play style is ${recap.style}. This affects how you approach matches and team fights.`,
+      highlight: recap.style.charAt(0).toUpperCase() + recap.style.slice(1),
+      color: "secondary",
+      type: "style" as const
+    }] : []),
+    
+    // Áreas de mejora principales (solo la primera para hacer espacio)
+    ...recap.improvements.slice(0, 1).map((improvement, index) => ({
+      icon: AlertTriangle,
+      title: "Priority Improvement",
+      description: `Focus on ${improvement.issue}: ${improvement.drill}`,
+      highlight: improvement.issue.charAt(0).toUpperCase() + improvement.issue.slice(1),
+      color: "chart-4",
       type: "improvement" as const,
       drill: improvement.drill
-    }))
-  ].slice(0, 4) // Máximo 4 insights
+    })),
+
+    // Recommended Champions insight
+    ...(recap.recommended_champions && recap.recommended_champions.length > 0 ? [{
+      icon: Crown,
+      title: "Recommended Champions",
+      description: `Based on your play style and performance, try: ${recap.recommended_champions.slice(0, 3).join(', ')}`,
+      highlight: "Perfect Match",
+      color: "chart-5",
+      type: "champions" as const
+    }] : []),
+
+    // Actionable Advice insight
+    ...(recap.actionable_advice && recap.actionable_advice.length > 0 ? [{
+      icon: Zap,
+      title: "Quick Wins",
+      description: recap.actionable_advice[0], // Mostrar el primer consejo
+      highlight: "Immediate Impact",
+      color: "accent",
+      type: "actionable" as const
+    }] : [])
+  ].slice(0, 6) // Aumentar a 6 insights máximo
 
   // Agregar insight de próxima partida si hay espacio
   if (insights.length < 4 && recap.next_match_tip) {
@@ -121,7 +166,23 @@ export function AIInsights({ recap }: AIInsightsProps) {
                     <Icon className={`w-6 h-6 ${colorClass}`} />
                   </div>
                   <div className="flex-1 min-h-0">
-                    <h3 className="text-xl font-bold mb-2">{insight.title}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold">{insight.title}</h3>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            {insight.type === 'strength' && insightTooltips.strength}
+                            {insight.type === 'improvement' && insightTooltips.improvement}
+                            {insight.type === 'style' && insightTooltips.style}
+                            {insight.type === 'champions' && insightTooltips.champions}
+                            {insight.type === 'actionable' && insightTooltips.actionable}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <p className="text-muted-foreground mb-4 leading-relaxed line-clamp-3">
                       {insight.description}
                     </p>
@@ -172,8 +233,42 @@ export function AIInsights({ recap }: AIInsightsProps) {
         </motion.div>
       )}
 
-      {/* Sección de drills de mejora adicionales si hay más de 2 mejoras */}
-      {recap.improvements && recap.improvements.length > 2 && (
+      {/* Sección de consejos accionables */}
+      {recap.actionable_advice && recap.actionable_advice.length > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-8 p-6 rounded-2xl bg-card/50 border border-border/50"
+        >
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-accent" />
+            Actionable Advice
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{insightTooltips.actionable}</p>
+              </TooltipContent>
+            </Tooltip>
+          </h3>
+          <div className="grid md:grid-cols-2 gap-3">
+            {recap.actionable_advice.map((advice, index) => (
+              <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-accent/20">
+                <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-accent">{index + 1}</span>
+                </div>
+                <span className="text-sm text-foreground leading-relaxed">{advice}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Sección de drills de mejora adicionales si hay más de 1 mejora */}
+      {recap.improvements && recap.improvements.length > 1 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -183,10 +278,18 @@ export function AIInsights({ recap }: AIInsightsProps) {
         >
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-chart-4" />
-            Additional Training Drills
+            All Training Drills
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-primary cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{insightTooltips.improvement}</p>
+              </TooltipContent>
+            </Tooltip>
           </h3>
           <div className="space-y-3">
-            {recap.improvements.slice(2).map((improvement, index) => (
+            {recap.improvements.slice(1).map((improvement, index) => (
               <div key={index} className="p-4 rounded-lg bg-muted/30 border border-border/30">
                 <h4 className="font-semibold text-foreground mb-2 capitalize flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-chart-4" />

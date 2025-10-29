@@ -4,6 +4,7 @@ import { useState } from "react"
 import { SummonerSearch } from "@/components/summoner-search"
 import { HeroSection } from "@/components/hero-section"
 import { StatsOverview } from "@/components/stats-overview"
+import { TipsAdvice } from "@/components/tips-advice"
 import { ChampionShowcase } from "@/components/champion-showcase"
 import { AIInsights } from "@/components/ai-insights"
 import { HighlightsSection } from "@/components/highlights-section"
@@ -71,7 +72,9 @@ export default function Home() {
             summary={playerData.summary} 
             playerName={playerData.summary?.summoner_name || "You"}
             topChampion={getTopChampion(playerData.matches)}
+            recap={playerData.recap}
           />
+          <TipsAdvice recap={playerData.recap} />
           <ShareSection 
             recap={playerData.recap}
             playerName={playerData.summary?.summoner_name || "Summoner"}

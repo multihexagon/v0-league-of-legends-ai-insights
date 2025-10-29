@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface Match {
   champion: string
@@ -24,6 +25,15 @@ interface Match {
 
 interface RecentGamesProps {
   matches: Match[]
+}
+
+// Tooltips para métricas de partidas
+const matchTooltips = {
+  kda: "Kill/Death/Assist ratio. +3.0 = Excelente, 2.0-3.0 = Bueno, 1.0-2.0 = Promedio, -1.0 = Necesita mejora",
+  cs: "Creeps Score - minions eliminados. Importante para el gold income. +150 CS a los 20 min es excelente",
+  vision: "Vision Score - wards colocadas y destruidas. +40 es excelente, 20-40 es bueno, -20 necesita más wards",
+  damage: "Daño total a campeones enemigos. Varía por rol y duración de partida",
+  gold: "Oro total ganado en la partida. Más oro = más items = más poder en teamfights"
 }
 
 export function RecentGames({ matches }: RecentGamesProps) {
@@ -245,7 +255,17 @@ export function RecentGames({ matches }: RecentGamesProps) {
                 {/* KDA Principal */}
                   <div className="p-4 rounded-2xl bg-background/50 border border-border/30">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-muted-foreground">KDA Detallado</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-muted-foreground">KDA Detallado</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-3 h-3 text-muted-foreground/50 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">{matchTooltips.kda}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                       <span className={`text-lg font-black ${kdaColor}`}>
                         {match.kda.toFixed(2)}
                       </span>
@@ -285,30 +305,70 @@ export function RecentGames({ matches }: RecentGamesProps) {
 
                   {/* Stats Grid Principal */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Damage</p>
-                      <p className="text-lg font-bold text-foreground">{(match.damage_dealt / 1000).toFixed(1)}k</p>
-                      <p className="text-xs text-primary">{match.dpm.toFixed(0)} DPM</p>
-                    </div>
-                    <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Gold</p>
-                      <p className="text-lg font-bold text-foreground">{(match.gold_earned / 1000).toFixed(1)}k</p>
-                      <p className="text-xs text-secondary">{match.gpm.toFixed(0)} GPM</p>
-                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20 cursor-help hover:bg-background/50 transition-colors">
+                          <div className="flex items-center justify-center gap-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Damage</p>
+                            <HelpCircle className="w-3 h-3 text-muted-foreground/50" />
+                          </div>
+                          <p className="text-lg font-bold text-foreground">{(match.damage_dealt / 1000).toFixed(1)}k</p>
+                          <p className="text-xs text-primary">{match.dpm.toFixed(0)} DPM</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{matchTooltips.damage}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-center p-3 bg-background/30 rounded-xl border border-border/20 cursor-help hover:bg-background/50 transition-colors">
+                          <div className="flex items-center justify-center gap-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Gold</p>
+                            <HelpCircle className="w-3 h-3 text-muted-foreground/50" />
+                          </div>
+                          <p className="text-lg font-bold text-foreground">{(match.gold_earned / 1000).toFixed(1)}k</p>
+                          <p className="text-xs text-secondary">{match.gpm.toFixed(0)} GPM</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{matchTooltips.gold}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
 
                   {/* Stats Secundarias */}
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="p-2 bg-background/20 rounded-lg">
-                      <p className="text-xs text-muted-foreground">CS</p>
-                      <p className="text-sm font-bold text-foreground">{match.cs}</p>
-                      <p className="text-xs text-muted-foreground">{match.cs_per_min.toFixed(1)}/min</p>
-                    </div>
-                    <div className="p-2 bg-background/20 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Vision</p>
-                      <p className="text-sm font-bold text-foreground">{match.vision_score}</p>
-                      <p className="text-xs text-accent">Score</p>
-                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="p-2 bg-background/20 rounded-lg cursor-help hover:bg-background/30 transition-colors">
+                          <div className="flex items-center justify-center gap-1">
+                            <p className="text-xs text-muted-foreground">CS</p>
+                            <HelpCircle className="w-2 h-2 text-muted-foreground/50" />
+                          </div>
+                          <p className="text-sm font-bold text-foreground">{match.cs}</p>
+                          <p className="text-xs text-muted-foreground">{match.cs_per_min.toFixed(1)}/min</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{matchTooltips.cs}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="p-2 bg-background/20 rounded-lg cursor-help hover:bg-background/30 transition-colors">
+                          <div className="flex items-center justify-center gap-1">
+                            <p className="text-xs text-muted-foreground">Vision</p>
+                            <HelpCircle className="w-2 h-2 text-muted-foreground/50" />
+                          </div>
+                          <p className="text-sm font-bold text-foreground">{match.vision_score}</p>
+                          <p className="text-xs text-accent">Score</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{matchTooltips.vision}</p>
+                      </TooltipContent>
+                    </Tooltip>
                     <div className="p-2 bg-background/20 rounded-lg">
                       <p className="text-xs text-muted-foreground">Dmg Taken</p>
                       <p className="text-sm font-bold text-foreground">{(match.damage_taken / 1000).toFixed(1)}k</p>

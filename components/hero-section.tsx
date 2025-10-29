@@ -1,8 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sparkles, Play } from "lucide-react"
+import { Sparkles, HelpCircle, TrendingUp, Crown, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface HeroSectionProps {
   summary: {
@@ -24,6 +25,8 @@ interface HeroSectionProps {
     style?: string
     trends?: string[]
     recommended_roles?: string[]
+    recommended_champions?: string[]
+    actionable_advice?: string[]
   }
 }
 
@@ -202,21 +205,92 @@ export function HeroSection({ summary, topChampion, recap }: HeroSectionProps) {
             className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-6"
           >
             {[
-              { label: "Games", value: summary.games.toString(), color: "primary" },
-              { label: "Win Rate", value: `${(summary.win_rate * 100).toFixed(0)}%`, color: "accent" },
-              { label: "Average KDA", value: summary.avg_kda.toFixed(2), color: "secondary" },
+              { 
+                label: "Games", 
+                value: summary.games.toString(), 
+                color: "primary",
+                tooltip: `Has jugado ${summary.games} partidas analizadas. Más partidas = análisis más preciso`
+              },
+              { 
+                label: "Win Rate", 
+                value: `${(summary.win_rate * 100).toFixed(0)}%`, 
+                color: "accent",
+                tooltip: `Tu porcentaje de victorias. +60% = Excelente, 50-60% = Bueno, -50% = Necesita mejora`
+              },
+              { 
+                label: "Average KDA", 
+                value: summary.avg_kda.toFixed(2), 
+                color: "secondary",
+                tooltip: `Promedio de KDA (Kills+Assists/Deaths). +2.0 = Excelente, 1.0-2.0 = Promedio, -1.0 = Practicar supervivencia`
+              },
             ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
-              className="p-8 rounded-2xl glass-card hover:scale-105 transition-transform cursor-pointer"
             >
-              <div className={`text-4xl md:text-5xl font-black text-${stat.color} mb-2`}>{stat.value}</div>
-              <div className="text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-8 rounded-2xl glass-card hover:scale-105 transition-transform cursor-pointer">
+                    <div className={`text-4xl md:text-5xl font-black text-${stat.color} mb-2`}>{stat.value}</div>
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+                      <HelpCircle className="w-3 h-3 text-muted-foreground/50" />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-center">{stat.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
             </motion.div>
           ))}
+          </motion.div>
+        )}
+
+        {/* Nueva sección para tendencias y recomendaciones */}
+        {recap && (recap.trends || recap.recommended_champions) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+            className="mt-12 max-w-4xl mx-auto"
+          >
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Trending Performance */}
+              {recap.trends && recap.trends.length > 0 && (
+                <div className="p-6 rounded-2xl glass-card">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp className="w-5 h-5 text-accent" />
+                    <h3 className="text-lg font-bold text-foreground">Trending Up</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {recap.trends[0]}
+                  </p>
+                </div>
+              )}
+
+              {/* Recommended Champions */}
+              {recap.recommended_champions && recap.recommended_champions.length > 0 && (
+                <div className="p-6 rounded-2xl glass-card">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Crown className="w-5 h-5 text-secondary" />
+                    <h3 className="text-lg font-bold text-foreground">Try These Champions</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recap.recommended_champions.slice(0, 3).map((champion, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 text-xs font-medium bg-secondary/20 text-secondary rounded-full border border-secondary/30"
+                      >
+                        {champion}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </div>

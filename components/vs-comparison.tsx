@@ -4,9 +4,10 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Swords, Trophy, Target, Zap, Search, Loader2, Coins, Eye, Shield, Crosshair, Star, Award, Users } from "lucide-react"
+import { Swords, Trophy, Target, Zap, Search, Loader2, Coins, Eye, Shield, Crosshair, Star, Award, Users, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PlayerSummary {
   games: number
@@ -41,9 +42,14 @@ interface VsComparisonProps {
     name: string
     image: string
   }
+  recap?: {
+    style?: string
+    confidence?: string
+    recommended_roles?: string[]
+  }
 }
 
-export function VsComparison({ summary, playerName = "You", topChampion }: VsComparisonProps) {
+export function VsComparison({ summary, playerName = "You", topChampion, recap }: VsComparisonProps) {
   if (!summary) return null
   
   const [opponentName, setOpponentName] = useState("")
@@ -337,6 +343,13 @@ export function VsComparison({ summary, playerName = "You", topChampion }: VsCom
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
                     </div>
                     <h3 className="text-3xl font-black text-foreground mb-2">{player1.name}</h3>
+                    {recap?.style && (
+                      <div className="mb-2">
+                        <span className="px-3 py-1 text-xs font-medium bg-secondary/20 text-secondary rounded-full border border-secondary/30">
+                          {recap.style.charAt(0).toUpperCase() + recap.style.slice(1)} Player
+                        </span>
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <p className="text-lg text-primary font-bold">{player1.rank}</p>
                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -434,7 +447,28 @@ export function VsComparison({ summary, playerName = "You", topChampion }: VsCom
 
                               <div className="text-center">
                                 <Icon className="w-6 h-6 text-foreground/60 mx-auto mb-2" />
-                                <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">{stat.label}</p>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center justify-center gap-1 cursor-help">
+                                      <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">{stat.label}</p>
+                                      <HelpCircle className="w-3 h-3 text-muted-foreground/50" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="max-w-xs text-center">
+                                      {stat.label === "Win Rate" && "Porcentaje de victorias. Mayor es mejor"}
+                                      {stat.label === "KDA" && "Kill/Death/Assist ratio. +2.0 es excelente"}
+                                      {stat.label === "Kills" && "Promedio de eliminaciones por partida"}
+                                      {stat.label === "Deaths" && "Promedio de muertes por partida. Menor es mejor"}
+                                      {stat.label === "Assists" && "Promedio de asistencias por partida"}
+                                      {stat.label === "CS/min" && "Minions por minuto. +7 es excelente"}
+                                      {stat.label === "Damage/min" && "Daño a campeones por minuto"}
+                                      {stat.label === "Gold" && "Oro promedio por partida"}
+                                      {stat.label === "Vision" && "Vision Score promedio. +40 es excelente"}
+                                      {!["Win Rate", "KDA", "Kills", "Deaths", "Assists", "CS/min", "Damage/min", "Gold", "Vision"].includes(stat.label) && "Métrica de rendimiento comparativa"}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {!stat.isHigherBetter && (
                                   <p className="text-xs text-accent/60 mt-1">The lower the better</p>
                                 )}

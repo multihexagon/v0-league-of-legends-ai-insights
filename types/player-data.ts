@@ -48,6 +48,8 @@ export interface Recap {
   style?: string
   trends?: string[]
   recommended_roles?: string[]
+  recommended_champions?: string[]
+  actionable_advice?: string[]
 }
 
 export interface PlayerData {
