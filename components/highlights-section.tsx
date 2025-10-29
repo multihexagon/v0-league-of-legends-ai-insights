@@ -92,7 +92,7 @@ export function HighlightsSection({ recap, matches, summary }: HighlightsSection
       dynamicHighlights.push({
         icon: Trophy,
         title: "Top Strength",
-        subtitle: recap.strengths[0],
+        subtitle: recap.strengths,
         description: "Your strongest point this season",
         stats: "AI Insight",
         gradient: "from-primary to-accent",
